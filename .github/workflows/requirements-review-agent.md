@@ -9,7 +9,6 @@ on:
   workflow_dispatch:
     inputs:
       issue_number:
-        description: "number of the issue in this repository to review"
         required: true
         type: number
   roles: [admin, maintainer, write]
@@ -22,7 +21,7 @@ permissions:
 
 engine:
   id: copilot
-  model: sonnet
+  model: gpt-5.3-codex
 timeout-minutes: 5
 strict: true
 
