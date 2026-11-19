@@ -20,7 +20,9 @@ permissions:
   contents: read
   issues: read
 
-engine: copilot
+engine:
+  id: copilot
+  model: sonnet
 timeout-minutes: 5
 strict: true
 
@@ -42,7 +44,7 @@ tools:
   bash: [cat, grep, find, ls, head, wc, jq]
 
 steps:
-  - name: load issue and previous reviews
+  - name: Load issue and previous reviews
     uses: actions/github-script@v9
     env:
       ISSUE_NUMBER: ${{ github.event.inputs.issue_number }}
