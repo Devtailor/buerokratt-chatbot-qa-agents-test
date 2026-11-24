@@ -6,12 +6,15 @@ description: >
   before test cases can be written.
 
 on:
-  slash_command:
-    events: [issue_comment]
   workflow_dispatch:
     inputs:
       issue_number:
         type: number
+  label_command:
+    name: review-requirements
+    events: [issues]
+  slash_command:
+    events: [issue_comment]
   status-comment: false
   roles: [admin, maintainer, write]
   report-blocked-version: false
@@ -90,7 +93,7 @@ steps:
           comment.user?.login === 'github-actions[bot]';
         const isRequirementsReview = (comment) =>
           comment.user?.login === 'github-actions[bot]' &&
-          (comment.body || '').includes('gh-aw-workflow-id: requirements-review-agent');
+          (comment.body || '').includes('"aw_workflow_id":"requirements-review-agent"');
         const isSlashCommand = (comment) =>
           /^\s*\/requirements-review-agent(\s|$)/.test(comment.body || '');
 
@@ -188,16 +191,17 @@ Some content may be hidden from you by the integrity filter (for example comment
 
 The count of `comments by others after last review` ignores a comment whose first word is `/requirements-review-agent`, and a comment from someone without repository access. If `previous runs of requirements-review-agent` is 0, review normally. If it is 1 or more:
 
-- if the issue body was not edited after the last posted review, `comments by others after last review` is 0, and neither the title nor the labels give new information apart from a `no-ui-impact` label added by this workflow, post **REVIEW UNCHANGED** and do not repeat the previous review.
-- otherwise, re-review the issue against the current title, body, labels, and new comments, and add a new question only when that new information makes it necessary, while a question that is still unanswered stays under **CLARIFICATION NEEDED** as one bullet such as "Still unanswered: ...".
+- if the issue body was not edited after the last posted review, `comments by others after last review` is 0, and neither the title nor the labels give new information apart from the `review-requirements` trigger label or the `no-ui-impact` label, post **REVIEW UNCHANGED** even when earlier questions are still unanswered, and do not repeat the previous review.
+- otherwise, re-review only the new information, post **CLARIFICATION NEEDED** with one bullet such as "Still unanswered: ..." for a question that is still open, add a new question only when the new information makes it necessary, and do not repeat suggested scenarios or verification already posted in the previous review.
 - if previous questions are now answered and nothing blocking remains, post **NO CLARIFICATION NEEDED**.
 
 ## Output
 
 Always produce exactly one comment, using the `add_comment` safe output. When the issue body itself is unavailable, finish with `noop` and do not guess. Leave every older comment visible.
-When a person using the product cannot see the change, call `add_labels` with `no-ui-impact` on this issue, including on a **REVIEW UNCHANGED** run if that label is not already present. Do not add it for a user-visible change. Do not add or remove any other label.
+When a person using the product cannot see the change, call `add_labels` with `no-ui-impact` on this issue, including on a **REVIEW UNCHANGED** run if that label is not already present. Do not add it for a user-visible change. Do not add or remove any other label. Writing that the change is not user-visible does not replace the `add_labels` call.
 
-Use exactly this format, in English. Use only one of **CLARIFICATION NEEDED**, **NO CLARIFICATION NEEDED**, and **REVIEW UNCHANGED**. For the last two, the comment is only that line. Omit **CLARIFICATION NEEDED**, **SUGGESTED ADDITIONAL TEST SCENARIOS**, and **VERIFICATION CONSIDERATIONS** when they have no items:
+Use exactly this format, in English. Use only one of **CLARIFICATION NEEDED**, **NO CLARIFICATION NEEDED**, and **REVIEW UNCHANGED**. For the last two, the comment is only that line.
+Omit **CLARIFICATION NEEDED**, **SUGGESTED ADDITIONAL TEST SCENARIOS**, and **VERIFICATION CONSIDERATIONS** when they have no items.
 
 ```markdown
 **CLARIFICATION NEEDED**
